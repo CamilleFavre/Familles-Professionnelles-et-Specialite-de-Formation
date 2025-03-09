@@ -16,49 +16,66 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4  # Assure-toi que c'est la dernière version
+        uses: actions/checkout@v4
 
       - name: Setup public directory
         run: mkdir -p public
 
       - name: Generate index.html
         run: |
-          echo '<!DOCTYPE html>
+          cat <<'EOF' > public/index.html
+          <!DOCTYPE html>
           <html lang="fr">
           <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <title>Fichiers disponibles</title>
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quarto-cli@latest/resources/quarto-web.css">
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quarto-cli@latest/resources/themes/slate/slate.css">
             <style>
-              body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+              body { background-color: #000; margin: 0; padding: 20px; color: white; }
+              .container { max-width: 600px; max-height: 80vh; padding: 30px; background: #222; border-radius: 10px; box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.1); overflow-y: auto; }
+              h1 { font-size: 2rem; margin-bottom: 20px; color: white; }
               ul { list-style-type: none; padding: 0; }
-              li { margin: 10px 0; }
-              a { text-decoration: none; font-size: 18px; color: blue; }
-              .back-button { margin-top: 20px; display: inline-block; padding: 10px 20px; background: grey; color: white; text-decoration: none; border-radius: 5px; }
+              li { margin: 10px 0; padding: 10px; border-bottom: 1px solid #555; }
+              a { text-decoration: none; font-weight: bold; color: #1e90ff; }
+              a:hover { text-decoration: underline; }
+              .description { color: #bbb; margin-top: 5px; font-size: 0.9em; }
             </style>
           </head>
-          <body>
-          <h1>📂 Fichiers disponibles</h1>
-          <ul>' > public/index.html
+          <body class="quarto-slate">
+          <div class="container">
+            <h1>📂 Fichiers disponibles</h1>
+            <ul>
+          EOF
+          
+      - name: List HTML files and descriptions
+        run: |
           for file in html/*.html; do
-            name=$(basename "$file")
-            echo "<li><a href=\"$name\">$name</a></li>" >> public/index.html
+            base=$(basename "$file" .html)
+            echo "<li><a href=\"$base.html\">$base</a>" >> public/index.html
+            if [ -f "html/$base.txt" ]; then
+              description=$(cat "html/$base.txt")
+              echo "<div class=\"description\">$description</div>" >> public/index.html
+            fi
+            echo "</li>" >> public/index.html
           done
-          echo '</ul></body></html>' >> public/index.html
+          echo '</ul></div></body></html>' >> public/index.html
 
-      - name: Copy HTML files
+      - name: Copy HTML files to public directory
         run: cp html/*.html public/
 
       - name: Add "Retour à la liste" button
         run: |
           for file in public/*.html; do
             if [ "$(basename "$file")" != "index.html" ]; then
-              sed -i 's|</body>|<a class="back-button" href="index.html">Retour à la liste</a></body>|' "$file"
+              echo '<div style="text-align:center; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:9999;"><a href="index.html" style="display:inline-block; padding:10px 20px; font-size:16px; color:#fff; background-color:#6c757d; border:none; border-radius:5px; text-decoration:none;">Retour à la liste</a></div>' >> "$file"
             fi
           done
 
-      - name: Upload artifact for deployment
-        uses: actions/upload-pages-artifact@v2  # Correct, c'est la version v2 ici
-
       - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v2  # Correct aussi
+        uses: jamesives/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: public

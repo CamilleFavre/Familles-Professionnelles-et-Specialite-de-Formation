@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4  # Assure-toi que c'est la dernière version
 
       - name: Setup public directory
         run: mkdir -p public
@@ -58,9 +58,7 @@ jobs:
           done
 
       - name: Upload artifact for deployment
-        uses: actions/upload-pages-artifact@v2
-        with:
-          path: public
+        uses: actions/upload-pages-artifact@v2  # Correct, c'est la version v2 ici
 
       - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v2  # Correct aussi

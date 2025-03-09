@@ -1,116 +1,30 @@
-name: Build and Deploy Site
+name: Deploy to GitHub Pages
 
 on:
   push:
     branches:
-      - main
-  pull_request:
-    branches:
-      - main
+      - main  # Déclenche l'action lors d'un push sur la branche `main`
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
-
+    
     steps:
-    # Checkout le code source du dépôt
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      # Étape 1 : Checkout du code
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    # Crée le dossier public pour le site généré
-    - name: Create public folder
-      run: mkdir -p public
+      # Étape 2 : Créer le dossier public (c'est où les fichiers seront générés)
+      - name: Create public folder
+        run: mkdir public
 
-    # Créer la page d'accueil index.html
-    - name: Create index.html
-      run: |
-        cat <<'EOF' > public/index.html
-        <!DOCTYPE html>
-        <html lang="fr">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-          <title>Fichiers disponibles</title>
-          <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-          <style>
-          body {
-            background-color: #000;
-            margin: 0;
-            padding: 20px;
-            color: white;
-          }
-          .container {
-            max-width: 600px;
-            max-height: 80vh;
-            padding: 30px;
-            background: #222;
-            border-radius: 10px;
-            box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.1);
-            overflow-y: auto;
-          }
-          h1 {
-            font-size: 2rem;
-            margin-bottom: 20px;
-          }
-          ul {
-            list-style-type: none;
-            padding: 0;
-          }
-          li {
-            margin: 10px 0;
-            padding: 10px;
-            border-bottom: 1px solid #555;
-          }
-          a {
-            text-decoration: none;
-            font-weight: bold;
-            color: #1e90ff;
-          }
-          a:hover {
-            text-decoration: underline;
-          }
-          .description {
-            color: #bbb;
-            margin-top: 5px;
-            font-size: 0.9em;
-          }
-          </style>
-        </head>
-        <body>
-        <div class="container">
-          <h1>📂 Fichiers Disponibles</h1>
-          <ul>
-        EOF
-    # Pour chaque fichier HTML dans le dossier html, créer un lien sur la page d'accueil
-    - name: Generate file list
-      run: |
-        for file in html/*.html; do
-          base=$(basename "$file" .html)
-          echo "<li><a href=\"$base.html\">$base</a>" >> public/index.html
-          if [ -f "html/$base.txt" ]; then
-            description=$(cat "html/$base.txt")
-            echo "<div class=\"description\">$description</div>" >> public/index.html
-          fi
-          echo "</li>" >> public/index.html
-        done
-        echo '</ul></div></body></html>' >> public/index.html
+      # Étape 3 : Copier les fichiers HTML dans le dossier public
+      - name: Copy HTML files to public folder
+        run: cp -r html/* public/
 
-    # Déplace tous les fichiers HTML dans le dossier public
-    - name: Move HTML files to public folder
-      run: mv html/* public/
-
-    # Ajouter un bouton de retour à la liste sur chaque fichier HTML sauf index.html
-    - name: Add "Back to list" button
-      run: |
-        for file in public/*.html; do
-          if [ "$(basename "$file")" != "index.html" ]; then
-            perl -i -pe 's{</\s*body\s*>}{<div style="text-align:center; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:9999;"><a href="index.html" style="display:inline-block; padding:10px 20px; font-size:16px; color:#fff; background-color:#6c757d; border:none; border-radius:5px; text-decoration:none;">Retour à la liste</a></div></body>}i' "$file"
-          fi
-        done
-
-    # Déployer les fichiers générés sur GitHub Pages
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./public
+      # Étape 4 : Déployer sur GitHub Pages
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}  # Utilisation du token par défaut de GitHub Actions
+          publish_dir: ./public  # Dossier à publier sur GitHub Pages

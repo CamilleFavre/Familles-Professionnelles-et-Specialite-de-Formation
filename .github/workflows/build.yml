@@ -3,28 +3,28 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - main  # Déclenche l'action lors d'un push sur la branche `main`
+      - main  # Déclenche l'action lorsqu'un push est fait sur la branche `main`
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
-      # Étape 1 : Checkout du code
+      # Étape 1 : Vérifier le code du dépôt
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Étape 2 : Créer le dossier public (c'est où les fichiers seront générés)
+      # Étape 2 : Créer un dossier public
       - name: Create public folder
         run: mkdir public
 
-      # Étape 3 : Copier les fichiers HTML dans le dossier public
-      - name: Copy HTML files to public folder
-        run: cp -r html/* public/
+      # Étape 3 : Copier index.html dans le dossier public
+      - name: Copy index.html to public folder
+        run: cp index.html public/
 
       # Étape 4 : Déployer sur GitHub Pages
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}  # Utilisation du token par défaut de GitHub Actions
-          publish_dir: ./public  # Dossier à publier sur GitHub Pages
+          github_token: ${{ secrets.GITHUB_TOKEN }}  # Token GitHub Action
+          publish_dir: ./public  # Le dossier à publier (ici, public/)
